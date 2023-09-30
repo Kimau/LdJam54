@@ -16,6 +16,7 @@ var runePoints : Array[Vector3]
 const SMOOTH_STEPS = 30
 const FLAT_STEPS = 4
 const POINT_SEP = 0.09
+const END_SEP = 0.015
 	
 func catmull_rom_spline(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: float) -> Vector3:
 	var t2 = t * t
@@ -415,6 +416,52 @@ func stretch_to_fit(points : Array[Vector3], minPt : Vector3, maxPt : Vector3) -
 				p.z * delta.z))
 
 	return modPoints
+
+func extend_ends(points : Array[Vector3]) -> Array[Vector3]:
+	if points.size() < 3:
+		return points
+
+	var extended_points = points.duplicate()
+	var testPt = extended_points[0]
+	var dir = (extended_points[1] - extended_points[0]).normalized()
+
+	var modified = false
+	for i in range(1, points.size() - 1):
+		for j in range(i + 1, points.size() - 1):
+			var p1 = points[i]
+			var p2 = points[j]
+			var closestPt = Geometry3D.get_closest_point_to_segment(testPt, p1, p2)
+			var segment_to_point = (closestPt - testPt).length()			
+			if segment_to_point < END_SEP:
+				modified = true
+				var extend_length = END_SEP * 2 - segment_to_point
+				testPt -= dir * extend_length
+				
+	# move everything else
+	if modified:
+		for i in range(1, points.size() - 1):
+			extended_points[i] -= testPt
+		
+		modified = false
+		
+	testPt = extended_points[points.size() - 1]
+	dir = (extended_points[points.size() - 2] - extended_points[points.size() - 1]).normalized()
+		
+	for i in range(0, points.size() - 2):
+		for j in range(i + 1, points.size() - 2):
+			var p1 = points[i]
+			var p2 = points[j]
+			var closestPt = Geometry3D.get_closest_point_to_segment(testPt, p1, p2)
+			var segment_to_point = (closestPt - testPt).length()
+			if segment_to_point < END_SEP:
+				modified = true
+				var extend_length = END_SEP * 2 - segment_to_point
+				testPt -= dir * extend_length
+	
+	if modified:
+		extended_points[points.size()-1] = testPt
+
+	return extended_points
 	
 func generate_rune(elem : Element):
 	var minPt = Vector3.ONE * -0.3
@@ -426,23 +473,28 @@ func generate_rune(elem : Element):
 	match elem:
 		Element.Fire: 
 			runePoints = generate_fire_points(8, minPt, maxPt)
+			runePoints = extend_ends(runePoints)
 			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
 			tList = get_flat_tube(runePoints, 0.01)
 		Element.Air: 
 			runePoints = generate_air_points(10, minPt, maxPt)
+			runePoints = extend_ends(runePoints)
 			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
 			tList = get_smooth_tube(runePoints, 0.01)
 		Element.Earth: 
 			runePoints = generate_earth_points(10, minPt, maxPt)
+			runePoints = extend_ends(runePoints)
 			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
 			tList = get_flat_tube(runePoints, 0.01)
 		Element.Water: 
 			runePoints = generate_water_points(8, minPt, maxPt)
+			runePoints = extend_ends(runePoints)
 			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
 			tList = get_smooth_tube(runePoints, 0.01)
 		Element.Neutral: 
 			runePoints = generate_neutral_points(10, minPt, maxPt)
-			runePoints = stretch_to_fit(runePoints, minPt, maxPt)
+			runePoints = extend_ends(runePoints)
+			runePoints = stretch_to_fit(runePoints, minPt, maxPt)			
 			tList = get_smooth_tube(runePoints, 0.01)
 	
 	add_tube(tList, 8)	
