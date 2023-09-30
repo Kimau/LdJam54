@@ -1,0 +1,25 @@
+[gd_scene load_steps=6 format=3 uid="uid://dgal27w8qki3w"]
+
+[ext_resource type="Script" path="res://src/main.gd" id="1_awaun"]
+[ext_resource type="PackedScene" uid="uid://c3etwj80nnb0c" path="res://VR/xr_origin_3d.tscn" id="2_1uq8w"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tqq2i"]
+sky_top_color = Color(0.580392, 0.32549, 0.662745, 1)
+sky_horizon_color = Color(0.188235, 0.74902, 0.67451, 1)
+ground_bottom_color = Color(0.341176, 0.501961, 0.192157, 1)
+ground_horizon_color = Color(0.0745098, 0.184314, 0.0823529, 1)
+
+[sub_resource type="Sky" id="Sky_u0fma"]
+sky_material = SubResource("ProceduralSkyMaterial_tqq2i")
+
+[sub_resource type="Environment" id="Environment_hlpr8"]
+background_mode = 2
+sky = SubResource("Sky_u0fma")
+
+[node name="main" type="Node3D"]
+script = ExtResource("1_awaun")
+
+[node name="XROrigin3D" parent="." instance=ExtResource("2_1uq8w")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_hlpr8")

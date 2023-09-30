@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://bfartinne3vff"]
+
+[ext_resource type="Script" path="res://src/SplineDraw.gd" id="1_8qr1m"]
+
+[sub_resource type="Environment" id="Environment_555fq"]
+background_mode = 1
+
+[node name="TestLine" type="Node3D"]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+script = ExtResource("1_8qr1m")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.00479)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_555fq")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.0914669, 0.995808, 0, -0.995808, 0.0914669, 0, 1.3315, 0)
