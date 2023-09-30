@@ -78,6 +78,9 @@ func add_tube(transforms: Array[Transform3D], sides: int):
 	surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
 	surface_set_color(get_rune_color())
 	
+	var invSides : float = 1.0 / float(sides)
+	var invT : float = 1.0 / float(transforms.size())
+	
 	for i in range(0, transforms.size() - 1):
 		var t0 = transforms[i]
 		var t1 = transforms[i + 1]
@@ -87,7 +90,11 @@ func add_tube(transforms: Array[Transform3D], sides: int):
 			var sin_angle = sin(angle)
 			var v0 = t0 * Vector3(cos_angle, 0, sin_angle)
 			var v1 = t1 * Vector3(cos_angle, 0, sin_angle)
+			surface_set_uv(Vector2(i * invT,j * invSides))
+			surface_set_normal((v0 - t0.origin).normalized())
 			surface_add_vertex(v0)
+			surface_set_uv(Vector2((i+1) * invT,j * invSides))
+			surface_set_normal((v1 - t1.origin).normalized())
 			surface_add_vertex(v1)
 	
 	surface_end()
