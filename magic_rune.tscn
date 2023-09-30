@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://6k7wjg68jucy"]
+
+[ext_resource type="Script" path="res://src/MagicRune.gd" id="1_xvddk"]
+[ext_resource type="Shader" path="res://RuneShader.gdshader" id="2_3lsbp"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ykflk"]
+render_priority = 0
+shader = ExtResource("2_3lsbp")
+shader_parameter/speed = 1.0
+shader_parameter/amplitude = 0.001
+shader_parameter/width = 0.1
+shader_parameter/frequency = 1.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_61jwh"]
+
+[node name="MagicRune" type="Node3D"]
+script = ExtResource("1_xvddk")
+mat = SubResource("ShaderMaterial_ykflk")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="Placeholder" type="CollisionShape3D" parent="Area3D"]
+shape = SubResource("SphereShape3D_61jwh")
