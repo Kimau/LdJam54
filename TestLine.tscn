@@ -1,20 +1,50 @@
-[gd_scene load_steps=3 format=3 uid="uid://bfartinne3vff"]
+[gd_scene load_steps=7 format=3 uid="uid://bfartinne3vff"]
 
 [ext_resource type="Script" path="res://src/SplineDraw.gd" id="1_8qr1m"]
+[ext_resource type="Script" path="res://src/test.gd" id="1_xh7wu"]
+[ext_resource type="Shader" path="res://RuneShader.gdshader" id="3_15601"]
 
 [sub_resource type="Environment" id="Environment_555fq"]
 background_mode = 1
 
-[node name="TestLine" type="Node3D"]
+[sub_resource type="BoxMesh" id="BoxMesh_o7whv"]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-script = ExtResource("1_8qr1m")
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tvv47"]
+render_priority = 0
+shader = ExtResource("3_15601")
+
+[node name="TestLine" type="Node3D"]
+script = ExtResource("1_xh7wu")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.00479)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.74393)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_555fq")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.0914669, 0.995808, 0, -0.995808, 0.0914669, 0, 1.3315, 0)
+
+[node name="Fire" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0618099, 1.08775, -0.0403158)
+mesh = SubResource("BoxMesh_o7whv")
+
+[node name="Air" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.28019, -0.0646534, 0)
+mesh = SubResource("BoxMesh_o7whv")
+
+[node name="Earth" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.50527, 0.0065155, 0)
+mesh = SubResource("BoxMesh_o7whv")
+
+[node name="Water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.131216, -1.12352, 0)
+mesh = SubResource("BoxMesh_o7whv")
+
+[node name="Neutral" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.102676, -0.060292, 0)
+mesh = SubResource("BoxMesh_o7whv")
+
+[node name="SplineDraw" type="Node" parent="."]
+script = ExtResource("1_8qr1m")
+mat = SubResource("ShaderMaterial_tvv47")
