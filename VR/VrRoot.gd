@@ -7,6 +7,9 @@ class_name VrRoot
 var xri: XRInterface
 var vp: Viewport
 
+@onready var conLeft : XRController3D = $TrackHandLeft
+@onready var conRight : XRController3D = $TrackHandRight
+@onready var wandTip : Node3D = %WandTip
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -20,17 +23,15 @@ func _ready():
 			
 
 func _process(_delta):
-	
 	if vp.use_xr != enableVr:
 		if enableVr:
 			startVR()
 		else:
 			stopVR()
-
+	
 
 func startVR():
 	$XRCamera3D.make_current()
-	
 
 	vp.use_xr = true
 	
@@ -89,3 +90,4 @@ func session_stopping():
 func session_visible():
 	print("OXR: sessionVisible")
 	#get_viewport().use_xr = false
+

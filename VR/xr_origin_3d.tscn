@@ -1,18 +1,9 @@
-[gd_scene load_steps=9 format=3 uid="uid://c3etwj80nnb0c"]
+[gd_scene load_steps=7 format=3 uid="uid://c3etwj80nnb0c"]
 
 [ext_resource type="Script" path="res://VR/VrRoot.gd" id="1_n07go"]
+[ext_resource type="PackedScene" uid="uid://dj3qjspisly27" path="res://Mesh/book.glb" id="2_0ib37"]
 [ext_resource type="Script" path="res://VR/Tracker.gd" id="2_leh4q"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_rjyp6"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_14jr0"]
-albedo_color = Color(0, 0.647059, 0.647059, 1)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_7i0d4"]
-size = Vector3(0.1, 0.116146, 0.123482)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2v8yw"]
-albedo_color = Color(1, 0.321569, 0.372549, 1)
+[ext_resource type="PackedScene" uid="uid://buautb8q8i85c" path="res://Mesh/wand.glb" id="3_lbrv7"]
 
 [sub_resource type="TorusMesh" id="TorusMesh_p47de"]
 
@@ -29,35 +20,20 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32641, 0.980029, -0.137352
 tracker = &"left_hand"
 pose = &"grip"
 
-[node name="AnimatableBody3D" type="AnimatableBody3D" parent="TrackHandLeft"]
-disable_mode = 2
-sync_to_physics = false
-
-[node name="HandDummy" type="MeshInstance3D" parent="TrackHandLeft/AnimatableBody3D"]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-mesh = SubResource("BoxMesh_rjyp6")
-skeleton = NodePath("../..")
-surface_material_override/0 = SubResource("StandardMaterial3D_14jr0")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="TrackHandLeft/AnimatableBody3D"]
-shape = SubResource("BoxShape3D_7i0d4")
+[node name="book" parent="TrackHandLeft" instance=ExtResource("2_0ib37")]
+transform = Transform3D(0.194647, -0.0938249, 0.0923819, 0, 0.164877, 0.167453, -0.131672, -0.138699, 0.136566, 0.0082716, 0.0478039, -0.075192)
 
 [node name="TrackHandRight" type="XRController3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.435387, 0.990275, -0.223132)
 tracker = &"right_hand"
 pose = &"grip"
 
-[node name="AnimatableBody3D" type="AnimatableBody3D" parent="TrackHandRight"]
-sync_to_physics = false
+[node name="wand" parent="TrackHandRight" instance=ExtResource("3_lbrv7")]
+transform = Transform3D(0.26, 0, 0, 0, 0.15469, 0.208976, 0, -0.208976, 0.15469, 0.00125641, -1.19209e-07, -0.000258982)
 
-[node name="HandDummy2" type="MeshInstance3D" parent="TrackHandRight/AnimatableBody3D"]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
-mesh = SubResource("BoxMesh_rjyp6")
-skeleton = NodePath("../../../TrackHandLeft")
-surface_material_override/0 = SubResource("StandardMaterial3D_2v8yw")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="TrackHandRight/AnimatableBody3D"]
-shape = SubResource("BoxShape3D_7i0d4")
+[node name="WandTip" type="Node3D" parent="TrackHandRight/wand"]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, -2.98023e-08, 0, 2.98023e-08, 1, 0.000835419, 1.19029, 0.011565)
 
 [node name="TrackWaist" type="XRController3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.852878, 0)

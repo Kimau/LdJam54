@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://dgal27w8qki3w"]
+[gd_scene load_steps=7 format=3 uid="uid://dgal27w8qki3w"]
 
 [ext_resource type="Script" path="res://src/main.gd" id="1_awaun"]
 [ext_resource type="PackedScene" uid="uid://c3etwj80nnb0c" path="res://VR/xr_origin_3d.tscn" id="2_1uq8w"]
+[ext_resource type="Script" path="res://src/SplineDraw.gd" id="3_akje6"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tqq2i"]
 sky_top_color = Color(0.580392, 0.32549, 0.662745, 1)
@@ -23,3 +24,6 @@ script = ExtResource("1_awaun")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_hlpr8")
+
+[node name="SplineMeshMaker" type="Node" parent="."]
+script = ExtResource("3_akje6")
