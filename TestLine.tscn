@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://bfartinne3vff"]
+[gd_scene load_steps=8 format=3 uid="uid://bfartinne3vff"]
 
 [ext_resource type="Script" path="res://src/SplineDraw.gd" id="1_8qr1m"]
 [ext_resource type="Script" path="res://src/test.gd" id="1_xh7wu"]
@@ -8,6 +8,8 @@
 background_mode = 1
 
 [sub_resource type="BoxMesh" id="BoxMesh_o7whv"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_ioent"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tvv47"]
 render_priority = 0
@@ -28,6 +30,11 @@ transform = Transform3D(1, 0, 0, 0, 0.0914669, 0.995808, 0, -0.995808, 0.0914669
 [node name="Fire" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0618099, 1.08775, -0.0403158)
 mesh = SubResource("BoxMesh_o7whv")
+
+[node name="Area3D" type="Area3D" parent="Fire"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Fire/Area3D"]
+shape = SubResource("SphereShape3D_ioent")
 
 [node name="Air" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.28019, -0.0646534, 0)

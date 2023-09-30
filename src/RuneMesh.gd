@@ -220,10 +220,10 @@ func dist_to_nearest_point(points : Array[Vector3], newPt: Vector3) -> float:
 func generate_fire_points(num_points: int, minPt: Vector3, maxPt: Vector3) -> Array[Vector3]:
 	var points : Array[Vector3] = [Vector3.ZERO]
 	# var deltaPt = maxPt - minPt
-	var invPt : float = 1.0 / float(num_points)
-	var yStep : float = maxPt.y * invPt
+	# var invPt : float = 1.0 / float(num_points)
+	#var yStep : float = maxPt.y * invPt
 	var yHeight : float = 0
-	var last_dir : Vector3 = Vector3.ZERO
+	#var last_dir : Vector3 = Vector3.ZERO
 	
 	for i in range(num_points - 1):
 		var t = float(i) / float(num_points-1)
@@ -333,11 +333,13 @@ func generate_neutral_points(num_points: int, minPt: Vector3, maxPt: Vector3) ->
 	var deltaPt = maxPt - minPt
 	
 	for i in range(num_points - 1):
+		var sep = 0.3
 		while true:
 			var new_point = gen_pt(
-				clamp_pt(points[-1] - deltaPt*0.3, minPt, maxPt),
-				clamp_pt(points[-1] + deltaPt*0.3, minPt, maxPt))
+				clamp_pt(points[-1] - deltaPt*sep, minPt, maxPt),
+				clamp_pt(points[-1] + deltaPt*sep, minPt, maxPt))
 			if(dist_to_nearest_point(points, new_point) < (POINT_SEP*2)):
+				sep += 0.1
 				continue
 			points.append(new_point)
 			break;
@@ -383,7 +385,7 @@ func stretch_to_fit(points : Array[Vector3], minPt : Vector3, maxPt : Vector3) -
 		
 	delta = clamp_pt(delta, Vector3(1.0,1.0,1.0), Vector3(2.0,2.0,2.0))
 	
-	var modPoints : Array[Vector3]
+	var modPoints : Array[Vector3] = []
 	for p in points:
 		modPoints.append(Vector3(
 				p.x * delta.x,
@@ -423,5 +425,4 @@ func generate_rune(elem : Element):
 	
 	add_tube(tList, 8)	
 	# add_bulge(runePoints, 0.03, Color.ANTIQUE_WHITE)
-	
-	
+
