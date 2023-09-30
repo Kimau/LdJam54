@@ -26,28 +26,28 @@ func _process(_delta: float) -> void:
 	# Last thing
 	prevIn = input
 
-func but_process(isPrim : bool, name : String, val : float):
-	input["prim" + name] = val
+func but_process(isPrim : bool, inputName : String, val : float):
+	input["prim" + inputName] = val
 
-func but_press_left(name : String) -> void:
-	but_process(false, name, 1.0)
+func but_press_left(inputName : String) -> void:
+	but_process(false, inputName, 1.0)
 	
-func but_press_right(name : String) -> void:
-	but_process(true, name, 1.0)
+func but_press_right(inputName : String) -> void:
+	but_process(true, inputName, 1.0)
 	
-	if(name == "ax_button"):
+	if(inputName == "ax_button"):
 		spawnRune = true
 	
-func but_release_left(name : String) -> void:
-	but_process(false, name, 0.0)
+func but_release_left(inputName : String) -> void:
+	but_process(false, inputName, 0.0)
 	
-func but_release_right(name : String) -> void:
-	but_process(true, name, 0.0)
+func but_release_right(inputName : String) -> void:
+	but_process(true, inputName, 0.0)
 
 
 func spawn_new_rune():
 	if(currRune):
 		currRune.reparent(self)
 	currRune = MeshInstance3D.new()
-	currRune.mesh = $SplineMeshMaker.make_new_rune()
+	currRune.mesh = $SplineMeshMaker.make_random_rune() # make_new_rune()
 	hmd.wandTip.add_child(currRune)

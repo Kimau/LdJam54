@@ -4,6 +4,13 @@ extends Node
 @export var points: Array[Vector3]
 var mesh : RuneMesh
 
+func make_random_rune() -> RuneMesh:
+	match(randi_range(0,4)):
+		0: return make_new_rune(RuneMesh.Element.Fire)
+		1: return make_new_rune(RuneMesh.Element.Air)
+		2: return make_new_rune(RuneMesh.Element.Earth)
+		3: return make_new_rune(RuneMesh.Element.Water)
+	return make_new_rune(RuneMesh.Element.Neutral)
 
 func make_new_rune(element : RuneMesh.Element) -> RuneMesh:
 	mesh = RuneMesh.new()
