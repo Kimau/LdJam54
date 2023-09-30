@@ -121,10 +121,17 @@ func add_bulge(new_points : Array[Vector3], radius : float, color : Color):
 ####
 
 func make_transform(p: Vector3, dir: Vector3, scale: float) -> Transform3D:
-	var d0 = dir.cross(Vector3.UP).normalized() * scale
-	var d1 = dir.normalized() * scale
-	var d2 = dir.cross(d0).normalized() * scale
-	return Transform3D(Basis(d0,d1,d2),p)
+	var d0 = dir.normalized() * scale
+	var d1 = Vector3.FORWARD * scale
+	var d2 = d0.cross(d1).normalized() * scale
+	
+	var b = Basis(d0,d1,d2)
+	if b.determinant() == 0:
+		d1 = Vector3.RIGHT * scale
+		d2 = d0.cross(d1).normalized() * scale
+		b = Basis(d0,d1,d2)
+	
+	return Transform3D(b,p)
 
 func get_smooth_tube(new_points: Array[Vector3], radius: float) -> Array[Transform3D]:
 	var transforms : Array[Transform3D] = []
@@ -153,26 +160,38 @@ func get_flat_tube(new_points: Array[Vector3], radius: float) -> Array[Transform
 		
 	@warning_ignore("integer_division")
 	var HALF_STEPS : int = FLAT_STEPS / 2
+	var t_step = 1.0 / float(FLAT_STEPS)
 	
-	transforms.append(make_transform(new_points[0] + (new_points[0] - new_points[1]).normalized() * radius, new_points[1] - new_points[0], 0))
+	var startDir = (new_points[1] - new_points[0]).normalized()
+	for t in Vector3(0,1,t_step):
+		transforms.append(make_transform(new_points[0] - (startDir * radius) * (1.0-t), startDir, t*radius))
+	
 	for i in range(1, new_points.size()-1):
 		var p0 = new_points[i-1]
 		var p1 = new_points[i]
 		var p2 = new_points[i+1]
 		
-		var d0 = p1 - p0
-		var d1 = p2 - p1
-		var t_step = 1.0 / float(FLAT_STEPS)
+		var d0 = (p1 - p0).normalized()
+		var d1 = (p2 - p1).normalized()
+		var dmid = d0.lerp(d1, 0.5)
 		
-		for t in range(0, FLAT_STEPS):
-			var tt = t * t_step
-			var p = p1.lerp(p2, tt)
-			var dir = d0.lerp(d1, tt).normalized()
-			var offset_dir = d0.normalized() if t < HALF_STEPS else d1.normalized()
-			var offset = offset_dir * radius * ((HALF_STEPS - abs(t - HALF_STEPS)) / (HALF_STEPS))
-			transforms.append(make_transform(p + offset, dir, radius))
+		transforms.append(make_transform((p0+p1)*0.5, d0, radius))
+		
+		for t in Vector3(0,1, t_step):
+			var p = p1 - d0*(1.0 - t)*radius
+			var dir = d0.lerp(dmid, t)
+			transforms.append(make_transform(p, dir, radius))
+		
+		for t in Vector3(0,1, t_step):
+			var p = p1 + d1*t*radius
+			var dir = dmid.lerp(d1, t)
+			transforms.append(make_transform(p, dir, radius))
+		
+		transforms.append(make_transform((p1+p2)*0.5, d1, radius))
 	
-	transforms.append(make_transform(new_points[-1] + (new_points[-1] - new_points[-2]).normalized() * radius, new_points[-2] - new_points[-1], 0))
+	var endDir = (new_points[-1] - new_points[-2]).normalized()
+	for t in Vector3(0,1,t_step):
+		transforms.append(make_transform(new_points[-1] + (endDir * radius) * (t), startDir, (1.0-t)*radius))
 	
 	return transforms
 
@@ -226,11 +245,7 @@ func dist_to_nearest_point(points : Array[Vector3], newPt: Vector3) -> float:
 	
 func generate_fire_points(num_points: int, minPt: Vector3, maxPt: Vector3) -> Array[Vector3]:
 	var points : Array[Vector3] = [Vector3.ZERO]
-	# var deltaPt = maxPt - minPt
-	# var invPt : float = 1.0 / float(num_points)
-	#var yStep : float = maxPt.y * invPt
 	var yHeight : float = 0
-	#var last_dir : Vector3 = Vector3.ZERO
 	
 	for i in range(num_points - 1):
 		var t = float(i) / float(num_points-1)
@@ -419,7 +434,7 @@ func generate_rune(elem : Element):
 			tList = get_smooth_tube(runePoints, 0.01)
 		Element.Earth: 
 			runePoints = generate_earth_points(10, minPt, maxPt)
-			runePoints = stretch_to_fit(runePoints, minPt, maxPt)
+			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
 			tList = get_flat_tube(runePoints, 0.01)
 		Element.Water: 
 			runePoints = generate_water_points(8, minPt, maxPt)

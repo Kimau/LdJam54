@@ -3,12 +3,16 @@ extends Node3D
 class_name MagicRune
 
 @export var mat: Material
-
 @export var element : RuneMesh.Element = RuneMesh.Element.Neutral
 @export var runeMesh : RuneMesh
-
 @onready var meshInst : MeshInstance3D = $MeshInstance3D
 @onready var colArea : Area3D = $Area3D
+
+var spellPrimed : bool = false
+var pulsePos : float = 0.0
+var spellLength = 1.0
+
+const SPELL_SPEED = 3.0
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -24,11 +28,24 @@ func _ready() -> void:
 	if not runeMesh:
 		reroll()
 
+func _process(delta: float) -> void:
+	if spellPrimed:
+		pulsePos += SPELL_SPEED * delta / spellLength
+		if pulsePos > 2:
+			pulsePos = 0
+			
+		meshInst.set_instance_shader_parameter("uvpos", pulsePos)
+		meshInst.set_instance_shader_parameter("amplitude", 0.04)
+		meshInst.set_instance_shader_parameter("width", 0.05)
+	else:
+		meshInst.set_instance_shader_parameter("uvpos", -1)
+		meshInst.set_instance_shader_parameter("amplitude", 0)
+		meshInst.set_instance_shader_parameter("width", 0)
 
 func reroll():
 	element = random_elem()
-	makeRuneMesh()
-	makeCollision()
+	make_rune_mesh()
+	make_collision()
 	
 func random_elem() -> RuneMesh.Element:
 	match(randi_range(0,4)):
@@ -38,14 +55,18 @@ func random_elem() -> RuneMesh.Element:
 		3: return RuneMesh.Element.Water
 	return RuneMesh.Element.Neutral
 
-func makeRuneMesh():
-	
+func make_rune_mesh():
 	runeMesh = RuneMesh.new()
 	runeMesh.generate_rune(element)
 	runeMesh.surface_set_material(0, mat)
 	meshInst.mesh = runeMesh
+	spellLength = 0
+	var prevP = Vector3.ZERO
+	for p in runeMesh.runePoints:
+		spellLength += (prevP - p).length()
+		prevP = p
 	
-func makeCollision():
+func make_collision():
 	for k in colArea.get_children():
 		colArea.remove_child(k)
 		k.queue_free()
@@ -72,9 +93,20 @@ func makeCollision():
 			cJoin.position = (p + prevP) * 0.5
 			
 			var xAxis : Vector3 = delta.normalized()
-			var yAxis : Vector3 = Vector3.RIGHT if xAxis.is_equal_approx(Vector3.UP) else Vector3.UP
+			var yAxis : Vector3 = Vector3.UP
 			var zAxis : Vector3 = xAxis.cross(yAxis)
-			
-			cJoin.basis = Basis(xAxis, yAxis, zAxis)
+			var newBasis = Basis(xAxis, yAxis, zAxis)
+			if newBasis.determinant() == 0:
+				yAxis = Vector3.RIGHT
+				zAxis = xAxis.cross(yAxis)
+				newBasis = Basis(xAxis, yAxis, zAxis)
+			cJoin.basis = newBasis
 		
 		prevP = p
+
+func spell_prime():
+	spellPrimed = true
+	pulsePos = 0
+
+func spell_cast():
+	spellPrimed = false

@@ -23,8 +23,8 @@ func _ready() -> void:
 		self.add_child(r)
 		
 		r.element = elem
-		r.makeRuneMesh()
-		r.makeCollision()
+		r.make_rune_mesh()
+		r.make_collision()
 		
 		runes.append(r)
 	
@@ -41,8 +41,8 @@ func _process(delta: float) -> void:
 	
 	if(Input.is_physical_key_pressed(KEY_SPACE)):
 		for r in runes:
-			r.makeRuneMesh()
-			r.makeCollision()
+			r.make_rune_mesh()
+			r.make_collision()
 	
 	for r in runes:
 		r.global_rotate(Vector3.UP, 1 * delta)
