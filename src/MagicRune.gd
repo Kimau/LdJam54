@@ -77,7 +77,13 @@ func make_rune_mesh():
 		spellLength += (prevP - p).length()
 		prevP = p
 	spellSpeed = SPELL_SPEED / (spellLength + 0.01 + runeMesh.runePoints.size())
-	
+
+func get_bounds() -> AABB:
+	var b : AABB = AABB()
+	for p in runeMesh.runePoints:
+		b = b.expand(p)
+	return b;
+
 func make_collision():
 	for k in colArea.get_children():
 		colArea.remove_child(k)

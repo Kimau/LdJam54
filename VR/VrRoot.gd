@@ -10,6 +10,11 @@ var vp: Viewport
 @onready var conLeft : XRController3D = $TrackHandLeft
 @onready var conRight : XRController3D = $TrackHandRight
 @onready var wandTip : Node3D = %WandTip
+@onready var pendingRunes : Node3D = %PendingRunes
+@onready var remainLabel : Label3D =  %RemainRune
+@onready var spellStatLabel : Label3D = $TrackHandLeft/Label3D/SpellStats
+@onready var newSpellArea : Area3D = $TrackHandLeft/Retry
+var tipInArea : Area3D = null
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -91,3 +96,11 @@ func session_visible():
 	print("OXR: sessionVisible")
 	#get_viewport().use_xr = false
 
+func _on_wandtip_area_entered(area: Area3D) -> void:
+	tipInArea = area
+	print("Tip in ", area)
+
+func _on_wandtip_area_exited(area: Area3D) -> void:
+	print("Tip out ", area)
+	if tipInArea == area:
+		tipInArea = null

@@ -1,9 +1,16 @@
-[gd_scene load_steps=7 format=3 uid="uid://c3etwj80nnb0c"]
+[gd_scene load_steps=10 format=3 uid="uid://c3etwj80nnb0c"]
 
 [ext_resource type="Script" path="res://VR/VrRoot.gd" id="1_n07go"]
 [ext_resource type="PackedScene" uid="uid://dj3qjspisly27" path="res://Mesh/book.glb" id="2_0ib37"]
 [ext_resource type="Script" path="res://VR/Tracker.gd" id="2_leh4q"]
 [ext_resource type="PackedScene" uid="uid://buautb8q8i85c" path="res://Mesh/wand.glb" id="3_lbrv7"]
+[ext_resource type="SystemFont" uid="uid://b7hwkg8bev1g3" path="res://fantasyFont.tres" id="3_xefb5"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_kweag"]
+size = Vector3(0.40379, 0.120415, 0.113161)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_oa46s"]
+radius = 0.1
 
 [sub_resource type="TorusMesh" id="TorusMesh_p47de"]
 
@@ -20,8 +27,82 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32641, 0.980029, -0.137352
 tracker = &"left_hand"
 pose = &"grip"
 
+[node name="Retry" type="Area3D" parent="TrackHandLeft"]
+transform = Transform3D(0.231339, -0.152414, 0.115118, 0.0147982, 0.19457, 0.227868, -0.190429, -0.170037, 0.157557, 0.0515443, -0.078222, 0.131289)
+collision_layer = 256
+collision_mask = 256
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TrackHandLeft/Retry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.186597, 0.133455)
+shape = SubResource("BoxShape3D_kweag")
+
+[node name="SpellStats" type="Label3D" parent="TrackHandLeft/Retry"]
+transform = Transform3D(0.8, -2.38419e-08, 2.38419e-08, 2.38419e-08, 0.8, 0, -2.38419e-08, 7.10543e-16, 0.8, -5.96046e-08, 0.165054, 0.123669)
+pixel_size = 0.008
+text = "NEW SPELL"
+font = ExtResource("3_xefb5")
+font_size = 16
+outline_size = 5
+width = 100.0
+
 [node name="book" parent="TrackHandLeft" instance=ExtResource("2_0ib37")]
 transform = Transform3D(0.194647, -0.0938249, 0.0923819, 0, 0.164877, 0.167453, -0.131672, -0.138699, 0.136566, 0.0082716, 0.0478039, -0.075192)
+
+[node name="Label3D" type="Label3D" parent="TrackHandLeft"]
+transform = Transform3D(0.140661, -0.109116, 0.14563, -9.62287e-09, 0.184065, 0.137914, -0.181974, -0.0843436, 0.112568, -0.0461951, 0.178255, -0.0359742)
+pixel_size = 0.008
+text = "Select runes to cast"
+font = ExtResource("3_xefb5")
+font_size = 16
+outline_size = 5
+width = 100.0
+
+[node name="SpellStats" type="Label3D" parent="TrackHandLeft/Label3D"]
+transform = Transform3D(0.8, -2.38419e-08, 2.38419e-08, 2.38419e-08, 0.8, 0, -2.38419e-08, 7.10543e-16, 0.8, -5.96046e-08, 0.165054, 0.123669)
+pixel_size = 0.008
+text = "Spell is X long and M vol"
+font = ExtResource("3_xefb5")
+font_size = 16
+outline_size = 5
+width = 100.0
+
+[node name="RemainRune" type="Label3D" parent="TrackHandLeft"]
+unique_name_in_owner = true
+transform = Transform3D(0.140661, -0.109116, 0.14563, -9.62287e-09, 0.184065, 0.137914, -0.181974, -0.0843436, 0.112568, 0.0290052, 0.0303154, 0.0492455)
+pixel_size = 0.008
+text = "X remain"
+font = ExtResource("3_xefb5")
+font_size = 16
+outline_size = 5
+width = 100.0
+
+[node name="PendingRunes" type="Node3D" parent="TrackHandLeft"]
+unique_name_in_owner = true
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -0.0707926, 0.116251, 0.0513192)
+
+[node name="Area3D" type="Area3D" parent="TrackHandLeft/PendingRunes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2.98023e-08)
+collision_layer = 256
+collision_mask = 256
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TrackHandLeft/PendingRunes/Area3D"]
+shape = SubResource("SphereShape3D_oa46s")
+
+[node name="Area3D2" type="Area3D" parent="TrackHandLeft/PendingRunes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.160695, 0.0490735, -0.218801)
+collision_layer = 256
+collision_mask = 256
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TrackHandLeft/PendingRunes/Area3D2"]
+shape = SubResource("SphereShape3D_oa46s")
+
+[node name="Area3D3" type="Area3D" parent="TrackHandLeft/PendingRunes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.361629, -0.0559742, -0.366361)
+collision_layer = 256
+collision_mask = 256
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TrackHandLeft/PendingRunes/Area3D3"]
+shape = SubResource("SphereShape3D_oa46s")
 
 [node name="TrackHandRight" type="XRController3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.435387, 0.990275, -0.223132)
@@ -34,6 +115,15 @@ transform = Transform3D(0.26, 0, 0, 0, -0.0629877, 0.252255, 0, -0.252255, -0.06
 [node name="WandTip" type="Node3D" parent="TrackHandRight/wand"]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, -2.98023e-08, 0, 2.98023e-08, 1, 0.000835419, 1.19029, 0.0115647)
+
+[node name="Area3D3" type="Area3D" parent="TrackHandRight/wand/WandTip"]
+transform = Transform3D(0.999999, 0, 0, 0, 1, 2.08616e-07, 0, -2.08616e-07, 1, -0.00781965, -0.014756, -0.0107095)
+collision_layer = 256
+collision_mask = 256
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TrackHandRight/wand/WandTip/Area3D3"]
+transform = Transform3D(1, 0, 0, 0, 1, -4.47035e-08, 0, 4.47035e-08, 1, 0, 0, 0)
+shape = SubResource("SphereShape3D_oa46s")
 
 [node name="TrackWaist" type="XRController3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.852878, 0)
@@ -61,3 +151,6 @@ script = ExtResource("2_leh4q")
 [node name="FootDummy" type="MeshInstance3D" parent="TrackFootRight"]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
 mesh = SubResource("PrismMesh_0cqw5")
+
+[connection signal="area_entered" from="TrackHandRight/wand/WandTip/Area3D3" to="." method="_on_wandtip_area_entered"]
+[connection signal="area_exited" from="TrackHandRight/wand/WandTip/Area3D3" to="." method="_on_wandtip_area_exited"]
