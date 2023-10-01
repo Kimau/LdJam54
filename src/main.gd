@@ -13,24 +13,26 @@ var wantToCast : bool = false
 var pendingRunes : Array[MagicRune] = []
 var holingArea : Array[Area3D] = []
 
-var spellEndPoint = Vector3.ZERO
-var spellEndDir = Vector3.ZERO
+var spellEndPoint : Vector3 = Vector3.ZERO
+var spellEndDir : Vector3 = Vector3.ZERO
 var validPos = false
 var liftingRune = false
 
 const RUNE_PREFAB = preload("res://magic_rune.tscn")
-const PEW_PREFAB = preload("res://pewParticles.tscn")
 const SPELL_SNAP = 0.5*0.3
 
-var partTip : GPUParticles3D
-var partSpellEnd : GPUParticles3D
-var partCollision : GPUParticles3D
+@onready var magicPart : GPUParticles3D = $MagicParticles
+@onready var magicFire : GPUParticles3D = $FireMagic
+@onready var magicWater : GPUParticles3D = $WaterMagic
+@onready var magicEarth : GPUParticles3D = $EarthMagic
+@onready var magicAir : GPUParticles3D = $AirMagic
 
 func _ready() -> void:
 	hmd.conLeft.button_pressed.connect(but_press_left)
 	hmd.conRight.button_pressed.connect(but_press_right)
 	hmd.conLeft.button_released.connect(but_release_left)
 	hmd.conRight.button_released.connect(but_release_right)
+		
 	
 	holingArea = []
 	var holdAreas = hmd.pendingRunes.find_children("*", "Area3D")
@@ -144,6 +146,12 @@ func last_rune() -> MagicRune:
 func _process(delta: float) -> void:
 	wantToCast = hmd.conRight.get_float("trigger")
 	
+	magicPart.global_position = hmd.wandTip.global_position # Fuck occlusion bugs
+	magicFire.global_position = hmd.wandTip.global_position # Fuck occlusion bugs
+	magicWater.global_position = hmd.wandTip.global_position # Fuck occlusion bugs
+	magicEarth.global_position = hmd.wandTip.global_position # Fuck occlusion bugs
+	magicAir.global_position = hmd.wandTip.global_position # Fuck occlusion bugs
+	
 	if hmd.tipInArea == hmd.newSpellArea and wantToCast:
 		new_spell_sequence()
 		return
@@ -162,8 +170,8 @@ func _process(delta: float) -> void:
 	elif wantToSpawnRune > 0:
 		wantToSpawnRune = 0
 		spawn_new_rune()
-	elif wantToCast:
-		pick_book_rune()
+	else:
+		pick_book_rune(wantToCast)
 	
 	for a in holingArea:
 		var isHovered = hmd.tipInArea == a
@@ -193,7 +201,34 @@ func opposite(a : RuneMesh.Element, b: RuneMesh.Element) -> bool:
 			return b == RuneMesh.Element.Earth
 	return false
 
-func pick_book_rune():
+func get_rune_color(c : RuneMesh.Element) -> Color:
+	match c:
+		RuneMesh.Element.Fire:
+			return Color.RED
+		RuneMesh.Element.Water:
+			return Color.BLUE
+		RuneMesh.Element.Air:
+			return Color.GOLD
+		RuneMesh.Element.Earth:
+			return Color.DARK_GREEN
+	return Color.DIM_GRAY
+
+func get_sparkles(c : RuneMesh.Element) -> GPUParticles3D:
+	match c:
+		RuneMesh.Element.Fire:
+			return magicFire
+		RuneMesh.Element.Water:
+			return magicWater
+		RuneMesh.Element.Air:
+			return magicAir
+		RuneMesh.Element.Earth:
+			return magicEarth
+	return magicPart
+
+func emit_sparkle(c : RuneMesh.Element, p : Vector3):
+	get_sparkles(c).emit_particle(Transform3D(Basis(), p), Vector3.ZERO, Color.WHITE, Color.BLACK, GPUParticles3D.EMIT_FLAG_POSITION)
+	
+func pick_book_rune(want_to_pick : bool):
 	for a in holingArea:
 		if hmd.tipInArea != a:
 			continue
@@ -203,8 +238,15 @@ func pick_book_rune():
 			return
 		var r : MagicRune = runes[0]
 		
+		var wandTipPos : Vector3 = hmd.wandTip.global_position
+		
 		var lr = last_rune()
 		if lr and opposite(lr.element, r.element):
+			emit_sparkle(lr.element, wandTipPos)
+			return
+			
+		if not want_to_pick:
+			emit_sparkle(r.element, wandTipPos)
 			return
 				
 		currRune = r
@@ -239,13 +281,15 @@ func update_place_rune(_delta : float):
 	validPos = true
 	if last_rune():
 		if (tipPos - spellEndPoint).length() > SPELL_SNAP:
+			emit_sparkle(last_rune().element, spellEndPoint)
+			emit_sparkle(currRune.element, currRune.get_start_point())
 			validPos = false
 			currRune.extendToWorldPoint = tipPos
 			return
 			
 		var cols = currRune.get_collisions()
 		for c in cols:
-			#DebugDraw3D.draw_sphere_hd(c, 0.008, Color.BLACK)
+			magicPart.emit_particle(Transform3D(Basis(), c), Vector3.ZERO, Color.DIM_GRAY, Color.BLACK, GPUParticles3D.EMIT_FLAG_POSITION )
 			validPos = false
 		
 		currRune.extendToWorldPoint = spellEndPoint

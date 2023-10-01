@@ -40,6 +40,7 @@ hue_variation_max = 0.15
 
 [node name="MagicParticles" type="GPUParticles3D"]
 material_override = SubResource("ShaderMaterial_d3qbr")
+emitting = false
 visibility_aabb = AABB(-0.357904, -0.360972, -0.305816, 0.715808, 0.721943, 0.611633)
 transform_align = 1
 process_material = SubResource("ParticleProcessMaterial_alfsg")
