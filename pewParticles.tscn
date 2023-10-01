@@ -1,0 +1,46 @@
+[gd_scene load_steps=10 format=3 uid="uid://d2m8q5fpkjdwx"]
+
+[ext_resource type="Shader" path="res://sparkleShader.gdshader" id="1_xl46r"]
+[ext_resource type="Texture2D" uid="uid://dotxxahxmgles" path="res://sparkle.png" id="2_luxgi"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_d3qbr"]
+render_priority = 0
+shader = ExtResource("1_xl46r")
+shader_parameter/blur_size = 0.01
+shader_parameter/num_samples = 10
+shader_parameter/tex = ExtResource("2_luxgi")
+
+[sub_resource type="Gradient" id="Gradient_7puci"]
+offsets = PackedFloat32Array(0, 0.252033, 0.878049, 0.97561)
+colors = PackedColorArray(0, 0, 0, 0, 1, 1, 1, 1, 0.277528, 0.277528, 0.277528, 1, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_8aufq"]
+gradient = SubResource("Gradient_7puci")
+
+[sub_resource type="Curve" id="Curve_vef2c"]
+_data = [Vector2(0, 0), 0.0, 0.0, 0, 0, Vector2(0.246753, 0.905263), 0.0, 0.0, 0, 0, Vector2(0.75974, 0.473684), -3.89053, -3.89053, 0, 0, Vector2(1, 0), 0.0820787, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="CurveTexture" id="CurveTexture_7pcww"]
+curve = SubResource("Curve_vef2c")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_alfsg"]
+direction = Vector3(5, 0, 0)
+spread = 180.0
+gravity = Vector3(0, 0, 0)
+initial_velocity_min = 0.25
+initial_velocity_max = 1.0
+scale_curve = SubResource("CurveTexture_7pcww")
+color = Color(0, 0.529412, 0.780392, 1)
+color_ramp = SubResource("GradientTexture1D_8aufq")
+hue_variation_min = -0.15
+hue_variation_max = 0.15
+
+[sub_resource type="QuadMesh" id="QuadMesh_63lbw"]
+
+[node name="MagicParticles" type="GPUParticles3D"]
+material_override = SubResource("ShaderMaterial_d3qbr")
+visibility_aabb = AABB(-0.357904, -0.360972, -0.305816, 0.715808, 0.721943, 0.611633)
+transform_align = 1
+process_material = SubResource("ParticleProcessMaterial_alfsg")
+draw_pass_1 = SubResource("QuadMesh_63lbw")

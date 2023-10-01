@@ -19,7 +19,12 @@ var validPos = false
 var liftingRune = false
 
 const RUNE_PREFAB = preload("res://magic_rune.tscn")
+const PEW_PREFAB = preload("res://pewParticles.tscn")
 const SPELL_SNAP = 0.5*0.3
+
+var partTip : GPUParticles3D
+var partSpellEnd : GPUParticles3D
+var partCollision : GPUParticles3D
 
 func _ready() -> void:
 	hmd.conLeft.button_pressed.connect(but_press_left)
@@ -240,7 +245,7 @@ func update_place_rune(_delta : float):
 			
 		var cols = currRune.get_collisions()
 		for c in cols:
-			DebugDraw3D.draw_sphere_hd(c, 0.008, Color.BLACK)
+			#DebugDraw3D.draw_sphere_hd(c, 0.008, Color.BLACK)
 			validPos = false
 		
 		currRune.extendToWorldPoint = spellEndPoint
