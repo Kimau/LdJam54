@@ -11,6 +11,8 @@ class_name MagicRune
 var spellPrimed : bool = false
 var pulsePos : float = 0.0
 var spellLength = 1.0
+var spellSpeed = 1.0
+var colList = []
 
 const SPELL_SPEED = 3.0
 
@@ -25,13 +27,14 @@ func _ready() -> void:
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.normal_enabled = false
 	
+	colArea.monitoring = false
 	if not runeMesh:
 		reroll()
 
 func _process(delta: float) -> void:
 	if spellPrimed:
-		pulsePos += SPELL_SPEED * delta / spellLength
-		if pulsePos > 2:
+		pulsePos += spellSpeed * delta 
+		if pulsePos > 1.3:
 			pulsePos = 0
 			
 		meshInst.set_instance_shader_parameter("uvpos", pulsePos)
@@ -65,6 +68,7 @@ func make_rune_mesh():
 	for p in runeMesh.runePoints:
 		spellLength += (prevP - p).length()
 		prevP = p
+	spellSpeed = SPELL_SPEED / (spellLength + 0.01 + runeMesh.runePoints.size())
 	
 func make_collision():
 	for k in colArea.get_children():
@@ -106,7 +110,31 @@ func make_collision():
 
 func spell_prime():
 	spellPrimed = true
+	colArea.monitoring = true
 	pulsePos = 0
 
 func spell_cast():
 	spellPrimed = false
+	colArea.monitoring = false
+
+
+func _on_area_3d_area_shape_entered(area_rid: RID, area: Area3D, area_shape_index: int, local_shape_index: int) -> void:
+	colList.append({
+		"area_rid": area_rid,
+		"area": area,
+		"area_shape_index": area_shape_index,
+		"local_shape_index": local_shape_index
+	})
+	
+	DebugCanvas.debug("Area Col", "%d - %s" %[colList.size(), str(colList)])
+
+
+func _on_area_3d_area_shape_exited(area_rid: RID, area: Area3D, area_shape_index: int, local_shape_index: int) -> void:
+	colList.erase({
+		"area_rid": area_rid,
+		"area": area,
+		"area_shape_index": area_shape_index,
+		"local_shape_index": local_shape_index
+	})
+	
+	DebugCanvas.debug("Area Col", "%d - %s" %[colList.size(), str(colList)])

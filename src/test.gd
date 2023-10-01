@@ -25,6 +25,7 @@ func _ready() -> void:
 		r.element = elem
 		r.make_rune_mesh()
 		r.make_collision()
+		r.spell_prime()
 		
 		runes.append(r)
 	
@@ -32,6 +33,8 @@ func _ready() -> void:
 	runes[1].global_position = Vector3(0,0,-1.28)
 	runes[2].global_position = Vector3(0,0,+1.28)
 	runes[3].global_position = Vector3(+1.28, 0, 0)
+	
+	runes[4].spell_prime()
 	
 	pass # Replace with function body.
 
@@ -46,13 +49,21 @@ func _process(delta: float) -> void:
 	
 	for r in runes:
 		r.global_rotate(Vector3.UP, 1 * delta)
-		r.meshInst.set_instance_shader_parameter("uvpos", pulsePos)
-		r.meshInst.set_instance_shader_parameter("amplitude", pulseAmplitude)
-		r.meshInst.set_instance_shader_parameter("width", pulseWidth)
 	
 	pulsePos += delta
 	if pulsePos > 2.0:
 		pulsePos = 0
+		
+	if(Input.is_key_pressed(KEY_I)):
+		runes[4].global_position = runes[4].global_position.lerp(runes[0].global_position, delta)
+	elif(Input.is_key_pressed(KEY_K)):
+		runes[4].global_position = runes[4].global_position.lerp(runes[1].global_position, delta)
+	elif(Input.is_key_pressed(KEY_J)):
+		runes[4].global_position = runes[4].global_position.lerp(runes[2].global_position, delta)
+	elif(Input.is_key_pressed(KEY_L)):
+		runes[4].global_position = runes[4].global_position.lerp(runes[3].global_position, delta)
+	else:
+		runes[4].global_position = runes[4].global_position.lerp(Vector3.ZERO, delta*3.0)
 
 	
 	if(Input.is_key_pressed(KEY_A)):

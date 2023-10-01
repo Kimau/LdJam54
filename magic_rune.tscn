@@ -6,10 +6,6 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ykflk"]
 render_priority = 0
 shader = ExtResource("2_3lsbp")
-shader_parameter/speed = 1.0
-shader_parameter/amplitude = 0.001
-shader_parameter/width = 0.1
-shader_parameter/frequency = 1.0
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_61jwh"]
 
@@ -23,3 +19,6 @@ mat = SubResource("ShaderMaterial_ykflk")
 
 [node name="Placeholder" type="CollisionShape3D" parent="Area3D"]
 shape = SubResource("SphereShape3D_61jwh")
+
+[connection signal="area_shape_entered" from="Area3D" to="." method="_on_area_3d_area_shape_entered"]
+[connection signal="area_shape_exited" from="Area3D" to="." method="_on_area_3d_area_shape_exited"]

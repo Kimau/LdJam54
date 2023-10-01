@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://bfartinne3vff"]
+[gd_scene load_steps=4 format=3 uid="uid://bfartinne3vff"]
 
 [ext_resource type="Script" path="res://src/test.gd" id="1_xh7wu"]
+[ext_resource type="Script" path="res://DebugCanvas.gd" id="2_xclcw"]
 
 [sub_resource type="Environment" id="Environment_555fq"]
 background_mode = 1
@@ -11,10 +12,13 @@ pulsePos = 0.5
 pulseAmplitude = 0.06
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.74393)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.866)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_555fq")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.0914669, 0.995808, 0, -0.995808, 0.0914669, 0, 1.3315, 0)
+
+[node name="DebugCanvas" type="Node2D" parent="."]
+script = ExtResource("2_xclcw")

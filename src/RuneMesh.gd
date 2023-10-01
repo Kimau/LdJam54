@@ -1,4 +1,4 @@
-extends ImmediateMesh
+extends ArrayMesh
 
 class_name RuneMesh
 
@@ -17,6 +17,7 @@ const SMOOTH_STEPS = 30
 const FLAT_STEPS = 4
 const POINT_SEP = 0.09
 const END_SEP = 0.015
+const NUM_SEGS = 16
 	
 func catmull_rom_spline(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: float) -> Vector3:
 	var t2 = t * t
@@ -26,20 +27,33 @@ func catmull_rom_spline(p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, t: f
 	
 	
 func add_lines(point_pairs: Array[Vector3], color: Color = Color.RED) -> void:
-	surface_begin(PRIMITIVE_LINES)
-	surface_set_color(color)
+	var verts = PackedVector3Array()
+	var cols = PackedColorArray()
 	for p in point_pairs:
-		surface_add_vertex(p)
-	if(point_pairs.size() & 1):
-		surface_add_vertex(point_pairs[0]) # Loop back
-	surface_end()
+		cols.append(color)
+		verts.append(p)
+	if(point_pairs.size() & 1): # Loop back
+		cols.append(color)
+		verts.append(point_pairs[0]) 
+	
+	var surface_array = []
+	surface_array.resize(Mesh.ARRAY_MAX)
+	surface_array[ArrayMesh.ARRAY_VERTEX] = verts
+	surface_array[ArrayMesh.ARRAY_COLOR] = cols
+	self.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
 
 func add_strip(points: Array[Vector3], color: Color = Color.RED) -> void:
-	surface_begin(PRIMITIVE_LINE_STRIP)
-	surface_set_color(color)
+	var verts = PackedVector3Array()
+	var cols = PackedColorArray()
 	for p in points:
-		surface_add_vertex(p)
-	surface_end()
+		cols.append(color)
+		verts.append(p)
+	
+	var surface_array = []
+	surface_array.resize(Mesh.ARRAY_MAX)
+	surface_array[ArrayMesh.ARRAY_VERTEX] = verts
+	surface_array[ArrayMesh.ARRAY_COLOR] = cols
+	self.add_surface_from_arrays(Mesh.PRIMITIVE_LINE_STRIP, surface_array)
 
 func add_sphere(center: Vector3, radius: float = 1.0, color: Color = Color.RED) -> void:
 	var step: int = 15
@@ -75,48 +89,221 @@ func add_cube(minPt: Vector3, maxPt: Vector3, color: Color = Color.RED) -> void:
 	add_strip([corners[5], corners[6], corners[2], corners[3], corners[7], corners[4]], color)
 	add_strip([corners[7], corners[6]], color)
 
-func add_tube(transforms: Array[Transform3D], sides: int):
-	surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
-	surface_set_color(get_rune_color())
+func addCubeToSurf(surface_array : Array, p0 : Vector3, p1 : Vector3, r0 : float, r1 : float, uv0 : float, uv1: float, col : Color):
+	var minPt = Vector3(
+		min(p0.x - r0, p1.x - r1),
+		min(p0.y - r0, p1.y - r1),
+		min(p0.z - r0, p1.z - r1))
+	var maxPt = Vector3(
+		max(p0.x + r0, p1.x + r1),
+		max(p0.y + r0, p1.y + r1),
+		max(p0.z + r0, p1.z + r1))
 	
+	var corners : Array[Vector3] = [
+		Vector3(minPt.x, minPt.y, minPt.z),  # 0
+		Vector3(maxPt.x, minPt.y, minPt.z),  # 1
+		Vector3(maxPt.x, maxPt.y, minPt.z),  # 2
+		Vector3(minPt.x, maxPt.y, minPt.z),  # 3
+		Vector3(minPt.x, minPt.y, maxPt.z),  # 4
+		Vector3(maxPt.x, minPt.y, maxPt.z),  # 5
+		Vector3(maxPt.x, maxPt.y, maxPt.z),  # 6
+		Vector3(minPt.x, maxPt.y, maxPt.z)   # 7
+	]
+	
+	# Define the indices for each quad in the cube
+	var indices = [
+		0, 1, 2, 0, 2, 3,  # Front face
+		4, 5, 6, 4, 6, 7,  # Back face
+		0, 1, 5, 0, 5, 4,  # Bottom face
+		2, 3, 7, 2, 7, 6,  # Top face
+		0, 3, 7, 0, 7, 4,  # Left face
+		1, 2, 6, 1, 6, 5   # Right face
+	]
+	
+	var idxBase = surface_array[ArrayMesh.ARRAY_VERTEX].size()
+	for i in range(0, indices.size(), 6):
+		for j in range(2):  # For each of the two triangles in a quad
+			for k in range(3):  # For each vertex in a triangle
+				var idx = indices[i + j * 3 + k]
+				var c = corners[idx % corners.size()]  # Pos
+				
+				surface_array[ArrayMesh.ARRAY_VERTEX].append(c)
+				surface_array[ArrayMesh.ARRAY_COLOR].append(col)
+				if (c - p0).length() < (c - p1).length():
+					surface_array[ArrayMesh.ARRAY_TEX_UV].append(Vector2(uv0, 0))
+				else:
+					surface_array[ArrayMesh.ARRAY_TEX_UV].append(Vector2(uv1, 0))
+
+				# Compute the normal for each face of the cube
+				if i < 6:    surface_array[ArrayMesh.ARRAY_NORMAL].append(Vector3( 0,  0, -1))  # Front face
+				elif i < 12: surface_array[ArrayMesh.ARRAY_NORMAL].append(Vector3( 0,  0,  1))  # Back face
+				elif i < 18: surface_array[ArrayMesh.ARRAY_NORMAL].append(Vector3( 0, -1,  0))  # Bottom face
+				elif i < 24: surface_array[ArrayMesh.ARRAY_NORMAL].append(Vector3( 0,  1,  0))  # Top face
+				elif i < 30: surface_array[ArrayMesh.ARRAY_NORMAL].append(Vector3(-1,  0,  0))  # Left face
+				else:        surface_array[ArrayMesh.ARRAY_NORMAL].append(Vector3( 1,  0,  0))  # Right face
+				
+				surface_array[ArrayMesh.ARRAY_INDEX].append(idxBase + idx)
+	
+
+func add_cube_sploob(pts: PackedVector3Array):
+	var verts = PackedVector3Array()
+	var cols = PackedColorArray()
+	var uvs = PackedVector2Array()
+	var norms = PackedVector3Array()
+	var idxs = PackedInt32Array()
+		
+	var surface_array = []
+	surface_array.resize(Mesh.ARRAY_MAX)
+	surface_array[ArrayMesh.ARRAY_VERTEX] = verts
+	surface_array[ArrayMesh.ARRAY_COLOR] = cols
+	surface_array[ArrayMesh.ARRAY_TEX_UV] = uvs
+	surface_array[ArrayMesh.ARRAY_NORMAL] = norms
+	surface_array[ArrayMesh.ARRAY_INDEX] = idxs
+	
+	var runeCol = get_rune_color()
+
+	var noofPairs : int = pts.size() / 2
+	var invT : float = 1.0 / float(pts.size())
+	
+	var minPt = Vector3.ONE * -0.5
+	var maxPt = Vector3.ONE * +0.5
+	
+	for i in range(2, pts.size()-1, 2):
+		addCubeToSurf(surface_array, 
+		pts[i], pts[i-2], 
+		pts[i+1].length(), pts[i-2+1].length(), 
+		i*invT, (i-2)*invT,
+		runeCol)
+	
+	add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface_array)
+	
+
+func add_tube(pts: PackedVector3Array, sides: int):
+	var verts = PackedVector3Array()
+	var cols = PackedColorArray()
+	var uvs = PackedVector2Array()
+	var norms = PackedVector3Array()
+	var idxs = PackedInt32Array()
+	
+	var runeCol = get_rune_color()
+
+	var noofPairs : int = pts.size() / 2	
 	var invSides : float = 1.0 / float(sides)
-	var invT : float = 1.0 / float(transforms.size())
+	var invT : float = 1.0 / float(pts.size())
 	
-	for i in range(0, transforms.size() - 1):
-		var t0 = transforms[i]
-		var t1 = transforms[i + 1]
-		for j in range(0, sides + 1):
-			var angle = j * 2.0 * PI / sides
-			var cos_angle = cos(angle)
-			var sin_angle = sin(angle)
-			var v0 = t0 * Vector3(cos_angle, 0, sin_angle)
-			var v1 = t1 * Vector3(cos_angle, 0, sin_angle)
-			surface_set_uv(Vector2(i * invT,j * invSides))
-			surface_set_normal((v0 - t0.origin).normalized())
-			surface_add_vertex(v0)
-			surface_set_uv(Vector2((i+1) * invT,j * invSides))
-			surface_set_normal((v1 - t1.origin).normalized())
-			surface_add_vertex(v1)
+	if sides & 1:
+		sides += 1 # Dont support odd sides
 	
-	surface_end()
+	var prevRing = []
+	for j in range(sides):
+		var ang = j * 2.0 * PI / sides
+		prevRing.append(Vector3.UP * cos(ang) + Vector3.RIGHT * sin(ang))
+	var prevNormal = Vector3.BACK
+	
+	for i in range(0, pts.size()-1, 2):
+		var pos = pts[i]
+		var dir = pts[i+1]
+		var rad = dir.length()
+		var p : Plane = Plane(dir.normalized(), pos)
+		
+		var up = Vector3.UP 
+		if abs(Vector3.UP.dot(dir)) < 0.8:
+			if abs(Vector3.RIGHT.dot(dir)) < 0.8:
+				up = Vector3.BACK
+			else:
+				up = Vector3.RIGHT
+		var side = dir.normalized().cross(up).normalized()		
+		up *= dir.length()
+		side *= dir.length()
+		
+		# Align so the ring doesn't twist		
+		var newRing = []
+		for j in range(sides):
+			var ang = j * 2.0 * PI / sides
+			newRing.append(pos + up * cos(ang) + side * sin(ang))
+
+		var optimal_offset = 0
+		var min_total_angle_diff = INF
+
+		for offset in range(sides):
+			var total_angle_diff = 0.0
+			for j in range(sides):
+				var prevAng = atan2(prevRing[j].dot(prevNormal.cross(prevRing[0])), prevRing[j].dot(prevNormal))
+				var newAng = atan2((newRing[(j + offset) % sides] - pos).dot(dir.cross(newRing[0] - pos)), (newRing[(j + offset) % sides] - pos).dot(dir))
+				var angle_diff = fmod((prevAng - newAng + PI), (2 * PI)) - PI
+				total_angle_diff += abs(angle_diff)
+			
+			if total_angle_diff < min_total_angle_diff:
+				min_total_angle_diff = total_angle_diff
+				optimal_offset = offset
+		
+		prevRing = newRing
+		for j in range(sides):
+			var jAdj = (j + optimal_offset) % (sides-1)
+			verts.append(newRing[jAdj])
+			cols.append(runeCol)
+			uvs.append(Vector2(i * invT,jAdj * invSides))
+			norms.append((newRing[jAdj] - pos).normalized())
+	
+	for i in range(noofPairs-1):
+		for j in range(sides):
+			# Current ring
+			var idx0 = i * sides + j
+			var idx1 = i * sides + (j + 1) % sides
+			
+			# Next ring
+			var idx2 = (i + 1) * sides + j
+			var idx3 = (i + 1) * sides + (j + 1) % sides
+			
+			# Append indices for two triangles forming a quad
+			idxs.append(idx0)
+			idxs.append(idx1)
+			idxs.append(idx2)
+			
+			idxs.append(idx2)
+			idxs.append(idx1)
+			idxs.append(idx3)
+	
+	
+	var surface_array = []
+	surface_array.resize(Mesh.ARRAY_MAX)
+	surface_array[ArrayMesh.ARRAY_VERTEX] = verts
+	surface_array[ArrayMesh.ARRAY_COLOR] = cols
+	surface_array[ArrayMesh.ARRAY_TEX_UV] = uvs
+	surface_array[ArrayMesh.ARRAY_NORMAL] = norms
+	surface_array[ArrayMesh.ARRAY_INDEX] = idxs
+	self.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface_array)
 
 func add_bulge(new_points : Array[Vector3], radius : float, color : Color):
 	var step : float = PI*2/12.0
+	var verts = PackedVector3Array()
+	var cols = PackedColorArray()
 	
 	for p in new_points:
-		surface_begin(Mesh.PRIMITIVE_TRIANGLES)
-		surface_set_color(color)
 		
 		for ang in Vector3(0.0, PI*2.0, step):
-			surface_add_vertex(p + Vector3(0, -radius, 0))
-			surface_add_vertex(p + Vector3(sin(ang), 0, cos(ang)) * radius) 
-			surface_add_vertex(p + Vector3(sin(ang+step), 0, cos(ang+step))*radius)
+			cols.append(color)
+			cols.append(color)
+			cols.append(color)
+			
+			verts.append(p + Vector3(0, -radius, 0))
+			verts.append(p + Vector3(sin(ang), 0, cos(ang)) * radius) 
+			verts.append(p + Vector3(sin(ang+step), 0, cos(ang+step))*radius)
 			
 		for ang in Vector3(0.0, PI*2.0, step):
-			surface_add_vertex(p + Vector3(0, +radius, 0))
-			surface_add_vertex(p + Vector3(sin(ang), 0, cos(ang)) * radius) 
-			surface_add_vertex(p + Vector3(sin(ang+step), 0, cos(ang+step))*radius)
-		surface_end()
+			cols.append(color)
+			cols.append(color)
+			cols.append(color)
+			
+			verts.append(p + Vector3(0, +radius, 0))
+			verts.append(p + Vector3(sin(ang), 0, cos(ang)) * radius) 
+			verts.append(p + Vector3(sin(ang+step), 0, cos(ang+step))*radius)
+			
+	var surface_array = []
+	surface_array.resize(Mesh.ARRAY_MAX)
+	surface_array[ArrayMesh.ARRAY_VERTEX] = verts
+	surface_array[ArrayMesh.ARRAY_COLOR] = cols
+	self.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface_array)
 	#
 
 ####
@@ -134,30 +321,34 @@ func make_transform(p: Vector3, dir: Vector3, scale: float) -> Transform3D:
 	
 	return Transform3D(b,p)
 
-func get_smooth_tube(new_points: Array[Vector3], radius: float) -> Array[Transform3D]:
-	var transforms : Array[Transform3D] = []
+func get_smooth_tube(new_points: Array[Vector3], radius: float) -> PackedVector3Array:
+	var pts : PackedVector3Array = []
 	if new_points.size() < 4:
 		printerr("Need at least 4 points for Catmull-Rom Spline")
-		return transforms
+		return pts
 	
 	# Add caps
-	transforms.append(make_transform(new_points[0] + (new_points[0] - new_points[1]).normalized() * radius, new_points[0] - new_points[1], 0))
+	pts.append(new_points[0] + (new_points[0] - new_points[1]).normalized() * radius)
+	pts.append((new_points[0] - new_points[1]).normalized() * radius * 0.1)
+	
 	for i in range(1, new_points.size() - 2):
 		var t_step = 1.0 / float(SMOOTH_STEPS)
 		for t in range(0, SMOOTH_STEPS):
 			var tt = t * t_step
 			var p = catmull_rom_spline(new_points[i - 1], new_points[i], new_points[i + 1], new_points[i + 2], tt)
 			var dir = (catmull_rom_spline(new_points[i - 1], new_points[i], new_points[i + 1], new_points[i + 2], min(tt + 0.01, 1.0)) - p).normalized()
-			transforms.append(make_transform(p, dir, radius))
-	transforms.append(make_transform(new_points[-1] + (new_points[-1] - new_points[-2]).normalized() * radius, new_points[-2] - new_points[-1], 0))
-	return transforms
+			pts.append(p)
+			pts.append(dir*radius)
+	pts.append(new_points[-1] + (new_points[-1] - new_points[-2]).normalized() * radius)
+	pts.append((new_points[-2] - new_points[-1]).normalized() * radius * 0.1)
+	return pts
 	
 
-func get_flat_tube(new_points: Array[Vector3], radius: float) -> Array[Transform3D]:
-	var transforms : Array[Transform3D] = []
+func get_flat_tube(new_points: Array[Vector3], radius: float) -> PackedVector3Array:
+	var pts : PackedVector3Array = []
 	if new_points.size() < 2:
 		printerr("Need at least 2 points for Flat Spline")
-		return transforms
+		return pts
 		
 	@warning_ignore("integer_division")
 	var HALF_STEPS : int = FLAT_STEPS / 2
@@ -165,7 +356,8 @@ func get_flat_tube(new_points: Array[Vector3], radius: float) -> Array[Transform
 	
 	var startDir = (new_points[1] - new_points[0]).normalized()
 	for t in Vector3(0,1,t_step):
-		transforms.append(make_transform(new_points[0] - (startDir * radius) * (1.0-t), startDir, t*radius))
+		pts.append(new_points[0] - (startDir * radius) * (1.0-t))
+		pts.append(startDir * t*radius)
 	
 	for i in range(1, new_points.size()-1):
 		var p0 = new_points[i-1]
@@ -176,25 +368,30 @@ func get_flat_tube(new_points: Array[Vector3], radius: float) -> Array[Transform
 		var d1 = (p2 - p1).normalized()
 		var dmid = d0.lerp(d1, 0.5)
 		
-		transforms.append(make_transform((p0+p1)*0.5, d0, radius))
+		pts.append((p0+p1)*0.5)
+		pts.append(d0*radius)
 		
 		for t in Vector3(0,1, t_step):
 			var p = p1 - d0*(1.0 - t)*radius
 			var dir = d0.lerp(dmid, t)
-			transforms.append(make_transform(p, dir, radius))
+			pts.append(p)
+			pts.append(dir.normalized() * radius)
 		
 		for t in Vector3(0,1, t_step):
 			var p = p1 + d1*t*radius
 			var dir = dmid.lerp(d1, t)
-			transforms.append(make_transform(p, dir, radius))
+			pts.append(p)
+			pts.append(dir.normalized() * radius)
 		
-		transforms.append(make_transform((p1+p2)*0.5, d1, radius))
+		pts.append((p1+p2)*0.5)
+		pts.append(d1.normalized() * radius)
 	
 	var endDir = (new_points[-1] - new_points[-2]).normalized()
 	for t in Vector3(0,1,t_step):
-		transforms.append(make_transform(new_points[-1] + (endDir * radius) * (t), startDir, (1.0-t)*radius))
+		pts.append(new_points[-1] + (endDir * radius) * (t))
+		pts.append(endDir * (1.0-t) * radius)
 	
-	return transforms
+	return pts
 
 ####
 
@@ -469,34 +666,36 @@ func generate_rune(elem : Element):
 	clear_surfaces()
 	
 	manaType = elem
-	var tList : Array[Transform3D] = []
+	var tList : PackedVector3Array
 	match elem:
 		Element.Fire: 
-			runePoints = generate_fire_points(8, minPt, maxPt)
+			runePoints = generate_fire_points(NUM_SEGS, minPt, maxPt)
 			runePoints = extend_ends(runePoints)
 			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
 			tList = get_flat_tube(runePoints, 0.01)
 		Element.Air: 
-			runePoints = generate_air_points(10, minPt, maxPt)
+			runePoints = generate_air_points(NUM_SEGS, minPt, maxPt)
 			runePoints = extend_ends(runePoints)
 			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
 			tList = get_smooth_tube(runePoints, 0.01)
 		Element.Earth: 
-			runePoints = generate_earth_points(10, minPt, maxPt)
+			runePoints = generate_earth_points(NUM_SEGS, minPt, maxPt)
 			runePoints = extend_ends(runePoints)
 			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
 			tList = get_flat_tube(runePoints, 0.01)
 		Element.Water: 
-			runePoints = generate_water_points(8, minPt, maxPt)
+			runePoints = generate_water_points(NUM_SEGS, minPt, maxPt)
 			runePoints = extend_ends(runePoints)
 			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
 			tList = get_smooth_tube(runePoints, 0.01)
 		Element.Neutral: 
-			runePoints = generate_neutral_points(10, minPt, maxPt)
+			runePoints = generate_neutral_points(NUM_SEGS, minPt, maxPt)
 			runePoints = extend_ends(runePoints)
 			runePoints = stretch_to_fit(runePoints, minPt, maxPt)			
 			tList = get_smooth_tube(runePoints, 0.01)
 	
-	add_tube(tList, 8)	
+	add_tube(tList, 8)
+	
+	
 	# add_bulge(runePoints, 0.03, Color.ANTIQUE_WHITE)
 
