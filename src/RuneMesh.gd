@@ -40,7 +40,7 @@ func add_lines(point_pairs: Array[Vector3], color: Color = Color.RED) -> void:
 	surface_array.resize(Mesh.ARRAY_MAX)
 	surface_array[ArrayMesh.ARRAY_VERTEX] = verts
 	surface_array[ArrayMesh.ARRAY_COLOR] = cols
-	self.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array)
+	self.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, surface_array, [], {}, Mesh.ARRAY_FORMAT_VERTEX | Mesh.ARRAY_FORMAT_COLOR)
 
 func add_strip(points: Array[Vector3], color: Color = Color.RED) -> void:
 	var verts = PackedVector3Array()
@@ -53,7 +53,7 @@ func add_strip(points: Array[Vector3], color: Color = Color.RED) -> void:
 	surface_array.resize(Mesh.ARRAY_MAX)
 	surface_array[ArrayMesh.ARRAY_VERTEX] = verts
 	surface_array[ArrayMesh.ARRAY_COLOR] = cols
-	self.add_surface_from_arrays(Mesh.PRIMITIVE_LINE_STRIP, surface_array)
+	self.add_surface_from_arrays(Mesh.PRIMITIVE_LINE_STRIP, surface_array, [], {}, Mesh.ARRAY_FORMAT_VERTEX | Mesh.ARRAY_FORMAT_COLOR)
 
 func add_sphere(center: Vector3, radius: float = 1.0, color: Color = Color.RED) -> void:
 	var step: int = 15
@@ -162,11 +162,11 @@ func add_cube_sploob(pts: PackedVector3Array):
 	
 	var runeCol = get_rune_color()
 
-	var noofPairs : int = pts.size() / 2
+	# var noofPairs : int = pts.size() / 2
 	var invT : float = 1.0 / float(pts.size())
 	
-	var minPt = Vector3.ONE * -0.5
-	var maxPt = Vector3.ONE * +0.5
+	# var minPt = Vector3.ONE * -0.5
+	# var maxPt = Vector3.ONE * +0.5
 	
 	for i in range(2, pts.size()-1, 2):
 		addCubeToSurf(surface_array, 
@@ -176,7 +176,42 @@ func add_cube_sploob(pts: PackedVector3Array):
 		runeCol)
 	
 	add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface_array)
+
+func add_thin_line(pts: PackedVector3Array):
+	var verts = PackedVector3Array()
+	var cols = PackedColorArray()
+	var uvs = PackedVector2Array()
+	var norms = PackedVector3Array()
+	var idxs = PackedInt32Array()
 	
+	var invT : float = 1.0 / float(pts.size())
+	
+	var col = get_rune_color()
+	
+	for i in range(0, pts.size()-1, 2):
+		var p0 = pts[i]
+		var d0 = pts[i+1]
+		
+		idxs.append(verts.size())
+		verts.append(p0)
+		idxs.append(verts.size())
+		verts.append(p0)
+		cols.append(col)
+		cols.append(col)
+		uvs.append(Vector2(i*invT, -100))
+		uvs.append(Vector2(i*invT, +100))
+		norms.append(d0)
+		norms.append(d0)
+		
+	
+	var surface_array = []
+	surface_array.resize(Mesh.ARRAY_MAX)
+	surface_array[ArrayMesh.ARRAY_VERTEX] = verts
+	surface_array[ArrayMesh.ARRAY_COLOR] = cols
+	surface_array[ArrayMesh.ARRAY_TEX_UV] = uvs
+	surface_array[ArrayMesh.ARRAY_NORMAL] = norms
+	self.add_surface_from_arrays(Mesh.PRIMITIVE_LINE_STRIP, surface_array, [], {}, 
+	Mesh.ARRAY_FORMAT_VERTEX | Mesh.ARRAY_FORMAT_COLOR | Mesh.ARRAY_FORMAT_TEX_UV | Mesh.ARRAY_FORMAT_NORMAL)
 
 func add_tube(pts: PackedVector3Array, sides: int):
 	var verts = PackedVector3Array()
@@ -187,6 +222,7 @@ func add_tube(pts: PackedVector3Array, sides: int):
 	
 	var runeCol = get_rune_color()
 
+	@warning_ignore("integer_division")
 	var noofPairs : int = pts.size() / 2	
 	var invSides : float = 1.0 / float(sides)
 	var invT : float = 1.0 / float(pts.size())
@@ -203,8 +239,6 @@ func add_tube(pts: PackedVector3Array, sides: int):
 	for i in range(0, pts.size()-1, 2):
 		var pos = pts[i]
 		var dir = pts[i+1]
-		var rad = dir.length()
-		var p : Plane = Plane(dir.normalized(), pos)
 		
 		var up = Vector3.UP 
 		if abs(Vector3.UP.dot(dir)) < 0.8:
@@ -272,7 +306,8 @@ func add_tube(pts: PackedVector3Array, sides: int):
 	surface_array[ArrayMesh.ARRAY_TEX_UV] = uvs
 	surface_array[ArrayMesh.ARRAY_NORMAL] = norms
 	surface_array[ArrayMesh.ARRAY_INDEX] = idxs
-	self.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface_array)
+	self.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface_array, [], {}, 
+		Mesh.ARRAY_FORMAT_VERTEX | Mesh.ARRAY_FORMAT_COLOR | Mesh.ARRAY_FORMAT_TEX_UV | Mesh.ARRAY_FORMAT_NORMAL | Mesh.ARRAY_FORMAT_INDEX)
 
 func add_bulge(new_points : Array[Vector3], radius : float, color : Color):
 	var step : float = PI*2/12.0
@@ -350,8 +385,6 @@ func get_flat_tube(new_points: Array[Vector3], radius: float) -> PackedVector3Ar
 		printerr("Need at least 2 points for Flat Spline")
 		return pts
 		
-	@warning_ignore("integer_division")
-	var HALF_STEPS : int = FLAT_STEPS / 2
 	var t_step = 1.0 / float(FLAT_STEPS)
 	
 	var startDir = (new_points[1] - new_points[0]).normalized()
@@ -471,7 +504,7 @@ func generate_water_points(num_points: int, minPt: Vector3, maxPt: Vector3) -> A
 		if i & 1:
 			yHeight += randf_range(yStep*1.5, yStep*2.0)
 		else:
-			yHeight -= randf_range(yStep*0.5, yStep*1.1)
+			yHeight += randf_range(yStep*0.5, yStep*1.1)
 		
 		var newPt = gen_pt(minPt, maxPt)
 		newPt.y = yHeight
@@ -517,7 +550,7 @@ func generate_air_points(num_points: int, minPt: Vector3, maxPt: Vector3) -> Arr
 	return points
 
 func generate_earth_points(num_points: int, minPt: Vector3, maxPt: Vector3) -> Array[Vector3]:
-	var points : Array[Vector3] = [Vector3.ZERO]
+	var points : Array[Vector3] = [Vector3.ZERO, Vector3.ZERO]
 	var deltaPt = maxPt - minPt
 	
 	var last_dir = 0
@@ -546,6 +579,7 @@ func generate_earth_points(num_points: int, minPt: Vector3, maxPt: Vector3) -> A
 		points.append(new_point)
 		last_point = new_point
 		last_dir = new_dir
+	points.append(last_point)
 	return points
 
 func generate_neutral_points(num_points: int, minPt: Vector3, maxPt: Vector3) -> Array[Vector3]:
@@ -666,36 +700,44 @@ func generate_rune(elem : Element):
 	clear_surfaces()
 	
 	manaType = elem
-	var tList : PackedVector3Array
-	match elem:
+	
+	match manaType:
 		Element.Fire: 
-			runePoints = generate_fire_points(NUM_SEGS, minPt, maxPt)
-			runePoints = extend_ends(runePoints)
-			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
-			tList = get_flat_tube(runePoints, 0.01)
+			runePoints = generate_fire_points(NUM_SEGS / 2, minPt, maxPt)
 		Element.Air: 
 			runePoints = generate_air_points(NUM_SEGS, minPt, maxPt)
-			runePoints = extend_ends(runePoints)
-			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
-			tList = get_smooth_tube(runePoints, 0.01)
 		Element.Earth: 
 			runePoints = generate_earth_points(NUM_SEGS, minPt, maxPt)
-			runePoints = extend_ends(runePoints)
-			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
-			tList = get_flat_tube(runePoints, 0.01)
 		Element.Water: 
-			runePoints = generate_water_points(NUM_SEGS, minPt, maxPt)
-			runePoints = extend_ends(runePoints)
-			#runePoints = stretch_to_fit(runePoints, minPt, maxPt)
-			tList = get_smooth_tube(runePoints, 0.01)
+			runePoints = generate_water_points(NUM_SEGS/2, minPt, maxPt)
 		Element.Neutral: 
 			runePoints = generate_neutral_points(NUM_SEGS, minPt, maxPt)
-			runePoints = extend_ends(runePoints)
-			runePoints = stretch_to_fit(runePoints, minPt, maxPt)			
+
+	make_surfaces()
+
+func generate_bridge(elem : Element, pts : Array[Vector3]):
+	manaType = elem
+	
+	runePoints = pts
+	
+	make_surfaces()
+
+func make_surfaces():
+	clear_surfaces()
+	
+	var tList : PackedVector3Array
+	match manaType:
+		Element.Fire: 
+			tList = get_flat_tube(runePoints, 0.01)
+		Element.Air: 
+			tList = get_smooth_tube(runePoints, 0.01)
+		Element.Earth: 
+			tList = get_flat_tube(runePoints, 0.01)
+		Element.Water: 
+			tList = get_smooth_tube(runePoints, 0.01)
+		Element.Neutral: 
 			tList = get_smooth_tube(runePoints, 0.01)
 	
+	add_thin_line(tList)
 	add_tube(tList, 8)
-	
-	
-	# add_bulge(runePoints, 0.03, Color.ANTIQUE_WHITE)
 

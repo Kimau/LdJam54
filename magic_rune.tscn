@@ -1,17 +1,13 @@
-[gd_scene load_steps=5 format=3 uid="uid://6k7wjg68jucy"]
+[gd_scene load_steps=4 format=3 uid="uid://6k7wjg68jucy"]
 
 [ext_resource type="Script" path="res://src/MagicRune.gd" id="1_xvddk"]
-[ext_resource type="Shader" path="res://RuneShader.gdshader" id="2_3lsbp"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_ykflk"]
-render_priority = 0
-shader = ExtResource("2_3lsbp")
+[ext_resource type="Material" uid="uid://dyt0alm0njfn4" path="res://runeMat.tres" id="2_tgqkl"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_61jwh"]
 
 [node name="MagicRune" type="Node3D"]
 script = ExtResource("1_xvddk")
-mat = SubResource("ShaderMaterial_ykflk")
+mat = ExtResource("2_tgqkl")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 

@@ -12,7 +12,9 @@ var spellPrimed : bool = false
 var pulsePos : float = 0.0
 var spellLength = 1.0
 var spellSpeed = 1.0
+var spellLast = false
 var colList = []
+var extendToWorldPoint : Vector3 = Vector3.ZERO
 
 const SPELL_SPEED = 3.0
 
@@ -38,12 +40,17 @@ func _process(delta: float) -> void:
 			pulsePos = 0
 			
 		meshInst.set_instance_shader_parameter("uvpos", pulsePos)
-		meshInst.set_instance_shader_parameter("amplitude", 0.04)
-		meshInst.set_instance_shader_parameter("width", 0.05)
+		meshInst.set_instance_shader_parameter("amplitude", 0.03)
+		meshInst.set_instance_shader_parameter("width", 0.09 / spellLength)
+	elif spellLast:
+		meshInst.set_instance_shader_parameter("uvpos", 1.0)
+		meshInst.set_instance_shader_parameter("amplitude", 0.03)
+		meshInst.set_instance_shader_parameter("width", 0.03 / spellLength)
 	else:
 		meshInst.set_instance_shader_parameter("uvpos", -1)
 		meshInst.set_instance_shader_parameter("amplitude", 0)
 		meshInst.set_instance_shader_parameter("width", 0)
+	meshInst.set_instance_shader_parameter("extend", extendToWorldPoint)
 
 func reroll():
 	element = random_elem()
@@ -62,6 +69,7 @@ func make_rune_mesh():
 	runeMesh = RuneMesh.new()
 	runeMesh.generate_rune(element)
 	runeMesh.surface_set_material(0, mat)
+	runeMesh.surface_set_material(1, mat)
 	meshInst.mesh = runeMesh
 	spellLength = 0
 	var prevP = Vector3.ZERO
@@ -78,7 +86,12 @@ func make_collision():
 	var ball = SphereShape3D.new()
 	ball.radius = 0.03
 	var prevP = null
+	var skipFirst = true
 	for p in runeMesh.runePoints:
+		if skipFirst:
+			skipFirst = false
+			continue
+		
 		var c = CollisionShape3D.new()
 		c.shape = ball
 		colArea.add_child(c)
@@ -95,6 +108,9 @@ func make_collision():
 			colArea.add_child(cJoin)
 			cJoin.owner = colArea
 			cJoin.position = (p + prevP) * 0.5
+			
+			if(delta.is_equal_approx(Vector3.ZERO)):
+				delta = Vector3.RIGHT
 			
 			var xAxis : Vector3 = delta.normalized()
 			var yAxis : Vector3 = Vector3.UP
@@ -115,8 +131,29 @@ func spell_prime():
 
 func spell_cast():
 	spellPrimed = false
+	spellLast = true
 	colArea.monitoring = false
+	
+func get_start_point() -> Vector3:
+	return global_transform * runeMesh.runePoints[0]
 
+func get_start_dir() -> Vector3:
+	var d = runeMesh.runePoints[1] - runeMesh.runePoints[0]
+	return (global_transform * d).normalized()
+
+func get_end_point() -> Vector3:
+	return global_transform * runeMesh.runePoints[-1]
+
+func get_end_dir() -> Vector3:
+	var d = runeMesh.runePoints[-1] - runeMesh.runePoints[-2]
+	return (global_transform * d).normalized()
+
+func get_collisions() -> Array[Vector3]:
+	var c : Array[Vector3] = []
+	for col in colList:
+		var colShape :Node3D= colArea.get_child(col.local_shape_index)
+		c.append(colShape.global_position)
+	return c
 
 func _on_area_3d_area_shape_entered(area_rid: RID, area: Area3D, area_shape_index: int, local_shape_index: int) -> void:
 	colList.append({
