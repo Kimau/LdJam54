@@ -1,9 +1,10 @@
-[gd_scene load_steps=35 format=3 uid="uid://dgal27w8qki3w"]
+[gd_scene load_steps=37 format=3 uid="uid://dgal27w8qki3w"]
 
 [ext_resource type="Script" path="res://src/main.gd" id="1_awaun"]
 [ext_resource type="PackedScene" uid="uid://c3etwj80nnb0c" path="res://VR/xr_origin_3d.tscn" id="2_1uq8w"]
 [ext_resource type="Shader" path="res://sparkleShader.gdshader" id="3_1kw01"]
 [ext_resource type="Texture2D" uid="uid://dotxxahxmgles" path="res://sparkle.png" id="4_t6kt7"]
+[ext_resource type="PackedScene" uid="uid://g7d3viemsy07" path="res://Mesh/room.glb" id="5_s2x60"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tqq2i"]
 sky_top_color = Color(0.580392, 0.32549, 0.662745, 1)
@@ -165,6 +166,8 @@ scale_curve = SubResource("CurveTexture_rpgy1")
 color = Color(1, 0.988235, 0.988235, 1)
 color_ramp = SubResource("GradientTexture1D_j4xss")
 
+[sub_resource type="SystemFont" id="SystemFont_00yxl"]
+
 [node name="main" type="Node3D"]
 script = ExtResource("1_awaun")
 
@@ -230,3 +233,20 @@ visibility_aabb = AABB(-0.357904, -0.360972, -0.305816, 0.715808, 0.721943, 0.61
 transform_align = 1
 process_material = SubResource("ParticleProcessMaterial_jm16j")
 draw_pass_1 = SubResource("QuadMesh_63lbw")
+
+[node name="room" parent="." instance=ExtResource("5_s2x60")]
+transform = Transform3D(3.14753, 0, 0, 0, 3.89035, 0, 0, 0, 3.26245, 0, -0.0630736, 0)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -0.286224, 0.958163, 0, -0.958163, -0.286224, -0.19824, 2.31883, -0.261343)
+
+[node name="OmniLight3D" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.17384, 0.582497, 0.320916)
+light_bake_mode = 1
+omni_range = 1.97868
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(-0.683987, 0, -0.729494, 0, 1, 0, 0.729494, 0, -0.683987, 1.66141, 1.97955, 1.2572)
+text = "Welcome to Ludum Dare Spell casting. Try make the most compact spell. Oppisite elements won't mix. I didn't get casting in so just refer to the score on your book"
+font = SubResource("SystemFont_00yxl")
+autowrap_mode = 3
